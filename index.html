@@ -30,6 +30,10 @@ input[type=file]{display:none}
 .th .eye{position:absolute;left:2px;bottom:2px;background:rgba(0,0,0,.55);width:18px;height:18px;border-radius:3px;display:flex;align-items:center;justify-content:center}
 .th .eye svg{width:13px;height:13px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .th .eye.off svg{stroke:#8e8e93}
+.th .lk{position:absolute;left:2px;top:2px;background:rgba(0,0,0,.55);width:18px;height:18px;border-radius:3px;display:none;align-items:center;justify-content:center}
+.th .lk.on,.th .lk.sel{display:flex}
+.th .lk svg{width:12px;height:12px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.th .lk.on svg{stroke:#ffd60a}
 #stripTog{position:absolute;left:58px;top:50%;transform:translateY(-50%);z-index:4;width:20px;height:52px;border-radius:0 10px 10px 0;background:rgba(44,44,46,.92);border:1px solid rgba(72,72,74,.8);border-left:0;display:flex;align-items:center;justify-content:center;color:#8e8e93;padding:0}
 #stripTog svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
 #stage.nostrip #strip{display:none}
@@ -166,7 +170,7 @@ function cur(){return layers.find(l=>l.id===sel)}
 function newLayer(img,name){
   const k=Math.min(1,MAXD/Math.max(img.width,img.height));
   const c=mkC(Math.round(img.width*k),Math.round(img.height*k));c.getContext('2d').drawImage(img,0,0,c.width,c.height);
-  const l={id:uid++,name,src:c,orig:cloneC(c),x:W/2,y:H/2,sx:1,sy:1,r:0,flipX:false,vis:true,br:0,ct:1,sat:1,hue:0,op:1,feather:0,warmth:0,tint:0,blur:0,shadow:0,shColor:'#000000',shBlur:20,shX:0,shY:0,olColor:'#ffffff',olWidth:0,olOp:1};
+  const l={id:uid++,name,src:c,orig:cloneC(c),x:W/2,y:H/2,sx:1,sy:1,r:0,flipX:false,vis:true,lock:false,br:0,ct:1,sat:1,hue:0,op:1,feather:0,warmth:0,tint:0,blur:0,shadow:0,shColor:'#000000',shBlur:20,shX:0,shY:0,olColor:'#ffffff',olWidth:0,olOp:1};
   fitLayer(l);store.set(l.id,{orig:l.orig});return l;
 }
 function fitLayer(l){const k=Math.min(W/l.src.width,H/l.src.height);l.sx=l.sy=k;l.x=W/2;l.y=H/2;l.r=0}
@@ -262,6 +266,7 @@ function draw(){
   if(l&&l.vis){
     const h=handles(l),k=1/view.s;ctx.save();ctx.lineWidth=2*k;ctx.strokeStyle='#ff3bd4';
     ctx.beginPath();ctx.moveTo(h.tl.x,h.tl.y);ctx.lineTo(h.tr.x,h.tr.y);ctx.lineTo(h.br.x,h.br.y);ctx.lineTo(h.bl.x,h.bl.y);ctx.closePath();ctx.stroke();
+    if(l.lock){ctx.restore()}else{
     ctx.fillStyle='#fff';
     const dot=(p,r)=>{ctx.beginPath();ctx.arc(p.x,p.y,r*k,0,7);ctx.fill();ctx.stroke()};
     dot(h.tl,11);dot(h.br,11);dot(h.rm,9);dot(h.bm,9);
@@ -272,6 +277,7 @@ function draw(){
     ic(h.rm,'M3 12h18M6 9l-3 3 3 3M18 9l3 3-3 3');
     ic(h.bm,'M12 3v18M9 6l3-3 3 3M9 18l3 3 3-3');
     ctx.restore();
+    }
   }
   if(dropper&&dropper.on&&dropper.touch){const k=1/view.s,p=dropper.touch,l2=cur();
     ctx.save();ctx.beginPath();ctx.arc(p.x,p.y,24*k,0,7);ctx.fillStyle=l2?l2.shColor:'#fff';ctx.fill();ctx.lineWidth=3*k;ctx.strokeStyle='#fff';ctx.stroke();
@@ -353,12 +359,12 @@ stage.addEventListener('pointerdown',e=>{
       const w=l.src.width,hh=l.src.height;
       let which=null;
       if(d(h.tl)<tol)which='rot';else if(d(h.br)<tol)which='sc';else if(d(h.rm)<tol)which='w';else if(d(h.bm)<tol)which='h';
-      if(which){pushUndo();g={l,h:which,pid:e.pointerId,sx:l.sx,sy:l.sy,r:l.r,ang0:Math.atan2(p.y-l.y,p.x-l.x)-l.r,d0:Math.hypot(p.x-l.x,p.y-l.y)};return}
+      if(which){if(l.lock){toast('Layer is locked');return}pushUndo();g={l,h:which,pid:e.pointerId,sx:l.sx,sy:l.sy,r:l.r,ang0:Math.atan2(p.y-l.y,p.x-l.x)-l.r,d0:Math.hypot(p.x-l.x,p.y-l.y)};return}
     }
     let t=null;
     if(l&&l.vis&&hit(l,p))t=l;else for(let i=layers.length-1;i>=0;i--){if(layers[i].vis&&hit(layers[i],p)){t=layers[i];break}}
-    if(t){sel=t.id;refresh();pushUndo();g={l:t,pid:e.pointerId,x:p.x,y:p.y,lx:t.x,ly:t.y}}else{sel=null;refresh()}
-  }else if(ptrs.size===2&&cur()){
+    if(t){sel=t.id;refresh();if(t.lock){toast('Layer is locked');return}pushUndo();g={l:t,pid:e.pointerId,x:p.x,y:p.y,lx:t.x,ly:t.y}}else{sel=null;refresh()}
+  }else if(ptrs.size===2&&cur()&&!cur().lock){
     const ids=[...ptrs.keys()],[a,b]=[...ptrs.values()],l=cur();if(!g)pushUndo();
     g={l,pinch:true,active:false,idA:ids[0],idB:ids[1],start:{[ids[0]]:{x:a.clientX,y:a.clientY},[ids[1]]:{x:b.clientX,y:b.clientY}},d:Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY),a:Math.atan2(b.clientY-a.clientY,b.clientX-a.clientX),sx:l.sx,sy:l.sy,r:l.r,cx:(a.clientX+b.clientX)/2,cy:(a.clientY+b.clientY)/2,lx:l.x,ly:l.y};
   }
@@ -396,7 +402,7 @@ stage.addEventListener('pointermove',e=>{
   }else{const p=toCanvas(e);l.x=g.lx+p.x-g.x;l.y=g.ly+p.y-g.y}
   draw();
 });
-function endP(e){ptrs.delete(e.pointerId);if(!ptrs.size){if(g&&g.dropper&&dropper){dropper.on=false;dropper.touch=null;pickData=null;const l=cur();renderSheet();draw();toast(dropper.picked&&l?'Color set to '+l[dropper.key||'shColor']:'Nothing to sample there');dropper=null}g=null}else if(g&&g.pinch&&ptrs.size===1){const id=[...ptrs.keys()][0],l=g.l,p=toCanvas([...ptrs.values()][0]);g={l,pid:id,x:p.x,y:p.y,lx:l.x,ly:l.y}}}
+function endP(e){ptrs.delete(e.pointerId);if(!ptrs.size){if(g&&g.dropper&&dropper){dropper.on=false;dropper.touch=null;pickData=null;const l=cur();const reopen=dropper.sheet,msg=dropper.picked&&l?'Color set to '+l[dropper.key||'shColor']:'Nothing to sample there';dropper=null;if(reopen)openSheet(reopen);else{renderSheet();draw()}toast(msg)}g=null}else if(g&&g.pinch&&ptrs.size===1){const id=[...ptrs.keys()][0],l=g.l,p=toCanvas([...ptrs.values()][0]);g={l,pid:id,x:p.x,y:p.y,lx:l.x,ly:l.y}}}
 stage.addEventListener('pointerup',endP);stage.addEventListener('pointercancel',endP);
 
 /* UI */
@@ -408,6 +414,7 @@ function renderStrip(){
     const t=mkC(104,104),tc=t.getContext('2d'),k=Math.min(104/l.src.width,104/l.src.height);
     tc.drawImage(l.src,(104-l.src.width*k)/2,(104-l.src.height*k)/2,l.src.width*k,l.src.height*k);d.appendChild(t);
     const eye=document.createElement('div');eye.className='eye'+(l.vis?'':' off');eye.innerHTML=l.vis?EYE_ON:EYE_OFF;eye.setAttribute('aria-label',l.vis?'Hide layer':'Show layer');eye.onclick=ev=>{ev.stopPropagation();pushUndo();l.vis=!l.vis;refresh()};d.appendChild(eye);
+    const lk=document.createElement('div');lk.className='lk'+(l.lock?' on':'')+(l.id===sel?' sel':'');lk.innerHTML=l.lock?LOCK_ON:LOCK_OFF;lk.setAttribute('aria-label',l.lock?'Unlock layer':'Lock layer');lk.onclick=ev=>{ev.stopPropagation();pushUndo();l.lock=!l.lock;refresh();toast(l.lock?'Layer locked':'Layer unlocked')};d.appendChild(lk);
     if(l.id===sel){const m=document.createElement('div');m.className='mv';
       const u=document.createElement('b');u.innerHTML=CH_UP;u.setAttribute('aria-label','Move up');u.onclick=ev=>{ev.stopPropagation();mv(l,1)};
       const dn=document.createElement('b');dn.innerHTML=CH_DN;dn.setAttribute('aria-label','Move down');dn.onclick=ev=>{ev.stopPropagation();mv(l,-1)};m.append(u,dn);d.appendChild(m)}
@@ -418,7 +425,9 @@ const EYE_ON='<svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7
 const EYE_OFF='<svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path d="M4 4l16 16"/></svg>';
 const CH_UP='<svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg>';
 const CH_DN='<svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>';
-function mv(l,dir){const i=layers.indexOf(l),j=i+dir;if(j<0||j>=layers.length)return;pushUndo();layers.splice(i,1);layers.splice(j,0,l);refresh()}
+const LOCK_ON='<svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>';
+const LOCK_OFF='<svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 017.8-1.4"/></svg>';
+function mv(l,dir){const i=layers.indexOf(l),j=i+dir;if(j<0||j>=layers.length)return;if(l.lock||layers[j].lock)return toast('Layer is locked');pushUndo();layers.splice(i,1);layers.splice(j,0,l);refresh()}
 const defaults={feather:0,op:1,br:0,ct:1,sat:1,warmth:0,tint:0,blur:0,shadow:0,shBlur:20,shX:0,shY:0,olWidth:0,olOp:1};
 let frameDraw=0;function scheduleDraw(){if(!frameDraw)frameDraw=requestAnimationFrame(()=>{frameDraw=0;draw()})}
 function sl(label,key,min,max,step,l){
@@ -487,13 +496,16 @@ function fxRow(l,o){ // shared swatch row for shadow/outline: custom color well 
   row.append(custom);
   const eye=document.createElement('button');eye.className=dropper&&dropper.on?'armed':'';eye.setAttribute('aria-label','Pick color from photo');eye.title='Pick color from photo';
   eye.innerHTML='<svg viewBox="0 0 24 24"><path d="M16.2 3.8l4 4L8.5 19.5H4.5v-4L16.2 3.8z"/><path d="M13.7 6.3l4 4"/></svg>';
-  eye.onclick=()=>{dropper=dropper&&dropper.on?null:{on:true,pushed:false,picked:false,key:o.key,enable:o.enable};pickData=null;renderSheet();draw();if(dropper)toast('Tap or drag on the photo to grab its color')};
+  eye.onclick=()=>{const wasSheet=sheetMode;dropper=dropper&&dropper.on?null:{on:true,pushed:false,picked:false,key:o.key,enable:o.enable};pickData=null;
+    if(dropper&&wasSheet){openSheet(wasSheet);dropper={on:true,pushed:false,picked:false,key:o.key,enable:o.enable,sheet:wasSheet};pickData=null} // hide the panel so the whole photo can be sampled (it reopens when the pick ends)
+    else{renderSheet();draw()}
+    if(dropper)toast('Tap or drag on the photo to grab its color')};
   row.append(eye);
   return row;
 }
 $('bgBtn').onclick=()=>openSheet('bg');$('bColor').onclick=()=>cur()&&openSheet('color');$('bShadow').onclick=()=>cur()&&openSheet('shadow');$('bOutline').onclick=()=>cur()&&openSheet('outline');
 $('bText').onclick=()=>{const l=cur();if(l&&l.type==='text'){openSheet('text')}else addText()};
-$('bFit').onclick=()=>{const l=cur();if(!l)return;pushUndo();fitLayer(l);draw()};
+$('bFit').onclick=()=>{const l=cur();if(!l)return;if(l.lock)return toast('Layer is locked');pushUndo();fitLayer(l);draw()};
 $('bFlip').onclick=()=>{const l=cur();if(!l)return;pushUndo();l.flipX=!l.flipX;draw()};
 $('bRemove').onclick=()=>{const l=cur();if(!l)return;pushUndo();layers.splice(layers.indexOf(l),1);sel=layers.length?layers[layers.length-1].id:null;refresh()};
 const setStrip=h=>{stage.classList.toggle('nostrip',h);$('stripTog').innerHTML=h?'<svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>':'<svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>';$('stripTog').setAttribute('aria-label',h?'Show layers panel':'Hide layers panel');try{localStorage.setItem('layers-strip-hidden',h?'1':'')}catch(e){}fitView();draw()};
@@ -512,7 +524,7 @@ $('exSave').onclick=async()=>{const l=cur();if(!l)return;$('exPop').classList.re
 $('replace').onclick=()=>{if(cur())$('fileChg').click()};
 $('fileChg').onclick=e=>e.stopPropagation();
 async function loadImg(f){const url=URL.createObjectURL(f);const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=url}).catch(()=>null);URL.revokeObjectURL(url);return img}
-$('fileChg').onchange=async e=>{const f=e.target.files[0],l=cur();e.target.value='';if(!f||!l)return;const img=await loadImg(f);if(!img)return toast("Couldn't open that photo");
+$('fileChg').onchange=async e=>{const f=e.target.files[0],l=cur();e.target.value='';if(!f||!l)return;if(l.type==='text')return toast("Can't replace a text layer with a photo");const img=await loadImg(f);if(!img)return toast("Couldn't open that photo");
   pushUndo();const n=newLayer(img,f.name);n.id=l.id;store.set(n.id,{orig:n.orig});Object.assign(l,{src:n.src,orig:n.orig});fitLayer(l);refresh()};
 $('file').onchange=async e=>{
   const files=[...e.target.files];e.target.value='';if(!files.length)return;pushUndo();
@@ -707,7 +719,7 @@ $('smDone').onclick=()=>{if(E)commitCut()};
 $('cutHelp').onclick=()=>toast('Drag to erase. The brush ring sits above your finger (Offset). Only Move pans without erasing; two fingers zoom. Tap the check to finish.');
 $('onlyMove').onclick=()=>{if(!E)return;E.moveOnly=!E.moveOnly;$('onlyMove').classList.toggle('on',E.moveOnly)};
 $('bCut').onclick=()=>cur()&&openCut();
-window.__t={adjusted,render,drawLayer,openSheet,sl,get layers(){return layers},newLayer,store,refresh,get E(){return E},cm,get state(){return {W,H,sel}},setCM,ccPos,imgPt,colorAt,magicAt,pushE,brushAt};
+window.__t={adjusted,render,drawLayer,openSheet,sl,get layers(){return layers},newLayer,store,refresh,get E(){return E},cm,get state(){return {W,H,sel}},get sheetMode(){return sheetMode},setCM,ccPos,imgPt,colorAt,magicAt,pushE,brushAt};
 [W,H]=screenSize();fitView();refresh();
 if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script></body></html>
