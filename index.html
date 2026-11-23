@@ -216,13 +216,14 @@ function outlineImage(l,img){ // colored silhouette expanded outward by olWidth 
   l._olSrc=img;l._olKey=key;l._olCanvas=c;l._olPad=pad;return c;
 }
 function renderText(l){
-  const size=l.fsize||140,pad=Math.round(size*.22),lh=Math.round(size*1.18),lines=String(l.text||' ').split('\n');
+  const size=l.fsize||140,ow=Math.max(0,l.tolWidth||0),pad=Math.round(size*.22)+ow,lh=Math.round(size*1.18),lines=String(l.text||' ').split('\n');
   const m=mkC(8,8).getContext('2d');m.font=size+'px "'+l.font+'"';
   const w=Math.max(40,Math.ceil(Math.max(...lines.map(t=>m.measureText(t).width))))+pad*2,h=lh*lines.length+pad*2;
   const c=mkC(w,h),x=c.getContext('2d');x.font=size+'px "'+l.font+'"';x.textBaseline='alphabetic';
   if(l.bgStyle==='block'){x.fillStyle=l.bgC;x.fillRect(0,0,w,h)}
   lines.forEach((t,i)=>{const top=pad+lh*i;
     if(l.bgStyle==='hl'&&t.length){const tw=x.measureText(t).width;x.fillStyle=l.bgC;x.fillRect(Math.round(pad*.35),Math.round(top+lh*.08),Math.ceil(tw+pad*1.3),Math.round(lh*.84))}
+    if(ow&&t.length){x.lineJoin='round';x.miterLimit=2;x.strokeStyle=l.tolColor;x.lineWidth=ow*2;x.strokeText(t,pad,top+Math.round(size*.85))}
     x.fillStyle=l.tColor;x.fillText(t,pad,top+Math.round(size*.85))});
   return c;
 }
@@ -231,7 +232,7 @@ async function addText(){
   toast('Loading fonts...');await ensureFonts();
   if(layers.length>=MAXL)return toast('Up to 11 layers');
   pushUndo();
-  const l={id:uid++,type:'text',name:'Text',text:'Text',font:FONTNAMES[0],fsize:140,tColor:'#ffffff',bgStyle:'none',bgC:'#111111',x:W/2,y:H/2,sx:1,sy:1,r:0,flipX:false,vis:true,br:0,ct:1,sat:1,hue:0,op:1,feather:0,warmth:0,tint:0,blur:0,shadow:0,shColor:'#000000',shBlur:20,shX:0,shY:0,olColor:'#ffffff',olWidth:0,olOp:1};
+  const l={id:uid++,type:'text',name:'Text',text:'Text',font:FONTNAMES[0],fsize:140,tColor:'#ffffff',bgStyle:'none',bgC:'#111111',tolColor:'#000000',tolWidth:0,x:W/2,y:H/2,sx:1,sy:1,r:0,flipX:false,vis:true,lock:false,br:0,ct:1,sat:1,hue:0,op:1,feather:0,warmth:0,tint:0,blur:0,shadow:0,shColor:'#000000',shBlur:20,shX:0,shY:0,olColor:'#ffffff',olWidth:0,olOp:1};
   applyText(l);
   const k=Math.min(1,W*.9/l.src.width,H*.5/l.src.height);l.sx=l.sy=k;
   layers.push(l);sel=l.id;refresh();openSheet('text');
@@ -480,6 +481,11 @@ function renderSheet(){
     [['none','None'],['hl','Highlight'],['block','Block']].forEach(([k,label])=>{const b=document.createElement('button');b.textContent=label;if(l.bgStyle===k)b.className='on';b.onclick=()=>{pushUndo();l.bgStyle=k;applyText(l);renderSheet();draw()};br2.append(b)});
     const bc=document.createElement('input');bc.type='color';bc.value=l.bgC;bc.setAttribute('aria-label','Background color');let bfirst=true;bc.oninput=()=>{if(bfirst){pushUndo();bfirst=false}l.bgC=bc.value;applyText(l);scheduleDraw()};bc.onchange=()=>bfirst=true;
     br2.append(bc);s.append(br2);
+    const or_=document.createElement('div');or_.className='row';or_.innerHTML=`<label for="fx-tolw">Outline</label><input id="fx-tolw" aria-label="Outline width" type="range" min="0" max="40" step="1" value="${l.tolWidth||0}"><input id="fx-tol" aria-label="Outline color" type="color" value="${l.tolColor||'#000000'}">`;
+    const ow=or_.querySelector('#fx-tolw'),oc=or_.querySelector('#fx-tol'),ofill=()=>ow.style.setProperty('--fill',((+ow.value)/40*100)+'%');ofill();let ofirst=true,cfirst2=true;
+    ow.oninput=()=>{if(ofirst){pushUndo();ofirst=false}l.tolWidth=+ow.value;ofill();applyText(l);scheduleDraw()};ow.onchange=()=>ofirst=true;
+    oc.oninput=()=>{if(cfirst2){pushUndo();cfirst2=false}l.tolColor=oc.value;applyText(l);scheduleDraw()};oc.onchange=()=>cfirst2=true;
+    s.append(or_);
   }
 }
 function fxRow(l,o){ // shared swatch row for shadow/outline: custom color well + eyedropper
