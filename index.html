@@ -264,41 +264,53 @@ stage.addEventListener('pointerdown',e=>{
   if(e.target.closest('#strip'))return;
   stage.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,e);
   const p=toCanvas(e),l=cur();
-  if(dropper&&dropper.on){g={dropper:true};dropper.touch=p;dropSample(p);draw();return}
+  if(dropper&&dropper.on){g={dropper:true,pid:e.pointerId};dropper.touch=p;dropSample(p);draw();return}
   if(ptrs.size===1){
     if(l&&l.vis){ // handles
-      const h=handles(l),tol=26/view.s,d=(a)=>Math.hypot(a.x-p.x,a.y-p.y);
+      const h=handles(l),tol=18/view.s,d=(a)=>Math.hypot(a.x-p.x,a.y-p.y);
       const w=l.src.width,hh=l.src.height;
       let which=null;
       if(d(h.tl)<tol)which='rot';else if(d(h.br)<tol)which='sc';else if(d(h.rm)<tol)which='w';else if(d(h.bm)<tol)which='h';
-      if(which){pushUndo();g={l,h:which,sx:l.sx,sy:l.sy,r:l.r,ang0:Math.atan2(p.y-l.y,p.x-l.x)-l.r,d0:Math.hypot(p.x-l.x,p.y-l.y)};return}
+      if(which){pushUndo();g={l,h:which,pid:e.pointerId,sx:l.sx,sy:l.sy,r:l.r,ang0:Math.atan2(p.y-l.y,p.x-l.x)-l.r,d0:Math.hypot(p.x-l.x,p.y-l.y)};return}
     }
     let t=null;
     if(l&&l.vis&&hit(l,p))t=l;else for(let i=layers.length-1;i>=0;i--){if(layers[i].vis&&hit(layers[i],p)){t=layers[i];break}}
-    if(t){sel=t.id;refresh();pushUndo();g={l:t,x:p.x,y:p.y,lx:t.x,ly:t.y}}else{sel=null;refresh()}
+    if(t){sel=t.id;refresh();pushUndo();g={l:t,pid:e.pointerId,x:p.x,y:p.y,lx:t.x,ly:t.y}}else{sel=null;refresh()}
   }else if(ptrs.size===2&&cur()){
-    const [a,b]=[...ptrs.values()],l=cur();if(!g)pushUndo();
-    g={l,pinch:true,d:Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY),a:Math.atan2(b.clientY-a.clientY,b.clientX-a.clientX),sx:l.sx,sy:l.sy,r:l.r,cx:(a.clientX+b.clientX)/2,cy:(a.clientY+b.clientY)/2,lx:l.x,ly:l.y};
+    const ids=[...ptrs.keys()],[a,b]=[...ptrs.values()],l=cur();if(!g)pushUndo();
+    g={l,pinch:true,active:false,idA:ids[0],idB:ids[1],start:{[ids[0]]:{x:a.clientX,y:a.clientY},[ids[1]]:{x:b.clientX,y:b.clientY}},d:Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY),a:Math.atan2(b.clientY-a.clientY,b.clientX-a.clientX),sx:l.sx,sy:l.sy,r:l.r,cx:(a.clientX+b.clientX)/2,cy:(a.clientY+b.clientY)/2,lx:l.x,ly:l.y};
   }
 });
 stage.addEventListener('pointermove',e=>{
   if(!ptrs.has(e.pointerId)||!g)return;ptrs.set(e.pointerId,e);
-  if(g.dropper){const p=toCanvas(e);dropper.touch=p;dropSample(p);draw();return}
+  if(g.dropper){if(e.pointerId!==g.pid)return;const p=toCanvas(e);dropper.touch=p;dropSample(p);draw();return}
   const l=g.l;
-  if(g.pinch&&ptrs.size>=2){
-    const [a,b]=[...ptrs.values()];const d=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY),an=Math.atan2(b.clientY-a.clientY,b.clientX-a.clientX),k=d/g.d;
-    l.sx=g.sx*k;l.sy=g.sy*k;l.r=g.r+(an-g.a);
-    l.x=g.lx+((a.clientX+b.clientX)/2-g.cx)/view.s;l.y=g.ly+((a.clientY+b.clientY)/2-g.cy)/view.s;
-  }else if(g.h){
+  if(g.pinch){
+    if(!ptrs.has(g.idA)||!ptrs.has(g.idB)){ // finger set changed (extra finger joined/left): re-anchor and wait for fresh two-finger motion
+      if(ptrs.size>=2){const ids=[...ptrs.keys()],[a,b]=[...ptrs.values()];g.idA=ids[0];g.idB=ids[1];g.start={[ids[0]]:{x:a.clientX,y:a.clientY},[ids[1]]:{x:b.clientX,y:b.clientY}};g.active=false;
+        g.d=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);g.a=Math.atan2(b.clientY-a.clientY,b.clientX-a.clientX);g.sx=l.sx;g.sy=l.sy;g.r=l.r;g.cx=(a.clientX+b.clientX)/2;g.cy=(a.clientY+b.clientY)/2;g.lx=l.x;g.ly=l.y}
+      draw();return;
+    }
+    const a=ptrs.get(g.idA),b=ptrs.get(g.idB);
+    if(!g.active){ // both fingers must travel before a pinch engages, so a stray touch can't spin the layer
+      const ma=Math.hypot(a.clientX-g.start[g.idA].x,a.clientY-g.start[g.idA].y),mb=Math.hypot(b.clientX-g.start[g.idB].x,b.clientY-g.start[g.idB].y);
+      if(ma>=8&&mb>=8){g.active=true;g.d=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);g.a=Math.atan2(b.clientY-a.clientY,b.clientX-a.clientX);g.sx=l.sx;g.sy=l.sy;g.r=l.r;g.cx=(a.clientX+b.clientX)/2;g.cy=(a.clientY+b.clientY)/2;g.lx=l.x;g.ly=l.y}
+    }
+    if(g.active){const d=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY),an=Math.atan2(b.clientY-a.clientY,b.clientX-a.clientX),k=d/g.d,mx=(a.clientX+b.clientX)/2,my=(a.clientY+b.clientY)/2;
+      l.sx=g.sx*k;l.sy=g.sy*k;l.r=g.r+(an-g.a);l.x=g.lx+(mx-g.cx)/view.s;l.y=g.ly+(my-g.cy)/view.s}
+    draw();return;
+  }
+  if(e.pointerId!==g.pid)return; // a gesture belongs to the finger that started it
+  if(g.h){
     const p=toCanvas(e),dx=p.x-l.x,dy=p.y-l.y,c=Math.cos(-l.r),s=Math.sin(-l.r),lx=dx*c-dy*s,ly=dx*s+dy*c,w=l.src.width/2,h=l.src.height/2;
     if(g.h==='rot')l.r=Math.atan2(dy,dx)-g.ang0;
     else if(g.h==='sc'){const k=Math.hypot(dx,dy)/g.d0;l.sx=g.sx*k;l.sy=g.sy*k}
     else if(g.h==='w')l.sx=Math.max(.02,Math.abs(lx)/w);
     else if(g.h==='h')l.sy=Math.max(.02,Math.abs(ly)/h);
-  }else if(!g.pinch){const p=toCanvas(e);l.x=g.lx+p.x-g.x;l.y=g.ly+p.y-g.y}
+  }else{const p=toCanvas(e);l.x=g.lx+p.x-g.x;l.y=g.ly+p.y-g.y}
   draw();
 });
-function endP(e){ptrs.delete(e.pointerId);if(!ptrs.size){if(g&&g.dropper&&dropper){dropper.on=false;dropper.touch=null;pickData=null;const l=cur();renderSheet();draw();toast(dropper.picked&&l?'Shadow color set to '+l.shColor:'Nothing to sample there');dropper=null}g=null}else if(g&&g.pinch&&ptrs.size===1){const l=g.l,p=toCanvas([...ptrs.values()][0]);g={l,x:p.x,y:p.y,lx:l.x,ly:l.y}}}
+function endP(e){ptrs.delete(e.pointerId);if(!ptrs.size){if(g&&g.dropper&&dropper){dropper.on=false;dropper.touch=null;pickData=null;const l=cur();renderSheet();draw();toast(dropper.picked&&l?'Shadow color set to '+l.shColor:'Nothing to sample there');dropper=null}g=null}else if(g&&g.pinch&&ptrs.size===1){const id=[...ptrs.keys()][0],l=g.l,p=toCanvas([...ptrs.values()][0]);g={l,pid:id,x:p.x,y:p.y,lx:l.x,ly:l.y}}}
 stage.addEventListener('pointerup',endP);stage.addEventListener('pointercancel',endP);
 
 /* UI */
