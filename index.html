@@ -95,6 +95,11 @@ input[type=file]{display:none}
 #sheet.effects .row input[type=color]{width:44px;height:30px;border:0;background:none;padding:0;flex:none}
 .swatches{display:flex;gap:7px;justify-content:space-between;height:49px;align-items:flex-start;padding:3px 0 6px}
 .swatches button{flex:1;min-width:0;height:38px;border-radius:6px;border:1px solid #888;padding:0;position:relative}
+.tctl{gap:8px}
+.tctl button{width:38px;height:32px;padding:0;display:flex;align-items:center;justify-content:center}
+.tctl button svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tsub{margin-top:2px}
+.tsub input[type=range]{flex:1;min-width:0}
 .swatches button.selected{outline:2px solid #079bff;outline-offset:1px}
 .swatches .transparent{background-color:#fff!important;background-image:conic-gradient(#bbb 25%,#fff 0 50%,#bbb 0 75%,#fff 0)!important;background-size:12px 12px!important}
 .swatches button svg{width:20px;height:20px;stroke:#eee;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;display:block;margin:auto}
@@ -440,6 +445,7 @@ function sl(label,key,min,max,step,l){
 }
 function openSheet(m){dropper=null;pickData=null;sheetMode=(sheetMode===m)?null:m;$('sheet').classList.toggle('show',!!sheetMode);['bColor','bShadow','bOutline','bText','bgBtn'].forEach(id=>$(id).classList.remove('on'));
   if(sheetMode)$({color:'bColor',shadow:'bShadow',outline:'bOutline',text:'bText',bg:'bgBtn'}[sheetMode]).classList.add('on');renderSheet();setTimeout(()=>{fitView();draw()},30)}
+let textCtl=null; // which Text-panel sub-control is expanded (size/color/behind/outline); null = slim strip only
 function renderSheet(){
   const s=$('sheet');s.className=(sheetMode?'show':'')+(['color','shadow','outline','text'].includes(sheetMode)?' effects '+sheetMode:'');s.innerHTML='';const l=cur();
   if(sheetMode==='bg'){
@@ -470,28 +476,51 @@ function renderSheet(){
     const fr=document.createElement('div');fr.className='fonts';
     FONTNAMES.forEach(f=>{const b=document.createElement('button');b.style.fontFamily='"'+f+'"';b.textContent='Aa';b.title=f;b.setAttribute('aria-label',f+' font');if(l.font===f)b.className='on';b.onclick=()=>{pushUndo();l.font=f;applyText(l);renderSheet();draw()};fr.append(b)});
     s.append(fr);
-    const szr=document.createElement('div');szr.className='row';szr.innerHTML=`<label for="fx-fsize">Size</label><input id="fx-fsize" aria-label="Size" type="range" min="40" max="320" step="1" value="${l.fsize}">`;
-    const si=szr.querySelector('input'),sfill=()=>si.style.setProperty('--fill',((+si.value-40)/280*100)+'%');sfill();let sfirst=true;
-    si.oninput=()=>{if(sfirst){pushUndo();sfirst=false}l.fsize=+si.value;sfill();applyText(l);scheduleDraw()};si.onchange=()=>sfirst=true;
-    s.append(szr);
-    const cr=document.createElement('div');cr.className='row';cr.innerHTML=`<label for="fx-tcol">Color</label><input id="fx-tcol" aria-label="Text color" type="color" value="${l.tColor}">`;
-    const tci=cr.querySelector('input');let cfirst=true;tci.oninput=()=>{if(cfirst){pushUndo();cfirst=false}l.tColor=tci.value;applyText(l);scheduleDraw()};tci.onchange=()=>cfirst=true;
-    s.append(cr);
-    const br2=document.createElement('div');br2.className='row';br2.innerHTML='<label>Behind</label>';
-    [['none','None'],['hl','Highlight'],['block','Block']].forEach(([k,label])=>{const b=document.createElement('button');b.textContent=label;if(l.bgStyle===k)b.className='on';b.onclick=()=>{pushUndo();l.bgStyle=k;applyText(l);renderSheet();draw()};br2.append(b)});
-    const bc=document.createElement('input');bc.type='color';bc.value=l.bgC;bc.setAttribute('aria-label','Background color');let bfirst=true;bc.oninput=()=>{if(bfirst){pushUndo();bfirst=false}l.bgC=bc.value;applyText(l);scheduleDraw()};bc.onchange=()=>bfirst=true;
-    br2.append(bc);s.append(br2);
-    const or_=document.createElement('div');or_.className='row';or_.innerHTML=`<label for="fx-tolw">Outline</label><input id="fx-tolw" aria-label="Outline width" type="range" min="0" max="40" step="1" value="${l.tolWidth||0}"><input id="fx-tol" aria-label="Outline color" type="color" value="${l.tolColor||'#000000'}">`;
-    const ow=or_.querySelector('#fx-tolw'),oc=or_.querySelector('#fx-tol'),ofill=()=>ow.style.setProperty('--fill',((+ow.value)/40*100)+'%');ofill();let ofirst=true,cfirst2=true;
-    ow.oninput=()=>{if(ofirst){pushUndo();ofirst=false}l.tolWidth=+ow.value;ofill();applyText(l);scheduleDraw()};ow.onchange=()=>ofirst=true;
-    oc.oninput=()=>{if(cfirst2){pushUndo();cfirst2=false}l.tolColor=oc.value;applyText(l);scheduleDraw()};oc.onchange=()=>cfirst2=true;
-    s.append(or_);
+    const ctlRow=document.createElement('div');ctlRow.className='row tctl';
+    const mkT=(key,label,svg)=>{const b=document.createElement('button');b.className=textCtl===key?'on':'';b.setAttribute('aria-label',label);b.innerHTML=svg;b.onclick=()=>{textCtl=textCtl===key?null:key;renderSheet()};ctlRow.append(b)};
+    mkT('size','Text size','<svg viewBox="0 0 24 24"><path d="M4 17L9 6l5 11M5.8 13.5h6.4"/><path d="M15 9l2.5-2.5L20 9M15 15l2.5 2.5L20 15"/></svg>');
+    mkT('color','Text color','<svg viewBox="0 0 24 24"><path d="M12 3s6 6.6 6 11a6 6 0 01-12 0c0-4.4 6-11 6-11z"/></svg>');
+    mkT('behind','Behind text','<svg viewBox="0 0 24 24"><path d="M4 20l1.2-4.5L16 5l3 3L8.2 18.8 4 20z"/><path d="M13.5 7.5l3 3"/></svg>');
+    mkT('outline','Text outline','<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M8.5 16l3.5-8 3.5 8M9.8 13h4.4"/></svg>');
+    s.append(ctlRow);
+    if(textCtl==='size'){
+      const sub=document.createElement('div');sub.className='row tsub';
+      sub.innerHTML=`<input id="fx-fsize" aria-label="Size" type="range" min="40" max="320" step="1" value="${l.fsize}">`;
+      const si=sub.querySelector('input'),sfill=()=>si.style.setProperty('--fill',((+si.value-40)/280*100)+'%');sfill();let sfirst=true;
+      si.oninput=()=>{if(sfirst){pushUndo();sfirst=false}l.fsize=+si.value;sfill();applyText(l);scheduleDraw()};si.onchange=()=>sfirst=true;
+      s.append(sub);
+    }else if(textCtl==='color'){
+      s.append(fxRow(l,{col:l.tColor,off:false,allowOff:false,key:'tColor',enable:x=>applyText(x),set:c=>{l.tColor=c;applyText(l)}}));
+    }else if(textCtl==='behind'){
+      const mr=document.createElement('div');mr.className='row tctl tsub';
+      [['none','No background','<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M6 6l12 12"/></svg>'],
+       ['hl','Highlight behind text','<svg viewBox="0 0 24 24"><path d="M4 20l1.2-4.5L16 5l3 3L8.2 18.8 4 20z"/><path d="M13.5 7.5l3 3"/></svg>'],
+       ['block','Block behind text','<svg viewBox="0 0 24 24"><rect x="5" y="6" width="14" height="12" rx="2"/><path d="M5 12h14v4a2 2 0 01-2 2H7a2 2 0 01-2-2v-4z" fill="currentColor" stroke="none"/></svg>']
+      ].forEach(([k,label,svg])=>{const b=document.createElement('button');b.setAttribute('aria-label',label);b.innerHTML=svg;if(l.bgStyle===k)b.className='on';b.onclick=()=>{pushUndo();l.bgStyle=k;applyText(l);renderSheet();draw()};mr.append(b)});
+      s.append(mr);
+      s.append(fxRow(l,{col:l.bgC,off:l.bgStyle==='none',key:'bgC',enable:x=>{if(x.bgStyle==='none')x.bgStyle='hl';applyText(x)},set:c=>{if(!c)l.bgStyle='none';else{l.bgC=c;if(l.bgStyle==='none')l.bgStyle='hl'}applyText(l)}}));
+    }else if(textCtl==='outline'){
+      s.append(fxRow(l,{col:l.tolColor||'#000000',off:!l.tolWidth,key:'tolColor',enable:x=>{if(!x.tolWidth)x.tolWidth=10;applyText(x)},set:c=>{if(!c)l.tolWidth=0;else{l.tolColor=c;if(!l.tolWidth)l.tolWidth=10}applyText(l)}}));
+      const sub=document.createElement('div');sub.className='row tsub';
+      sub.innerHTML=`<input id="fx-tolw" aria-label="Outline width" type="range" min="0" max="40" step="1" value="${l.tolWidth||0}">`;
+      const ow=sub.querySelector('input'),ofill=()=>ow.style.setProperty('--fill',((+ow.value)/40*100)+'%');ofill();let ofirst=true;
+      ow.oninput=()=>{if(ofirst){pushUndo();ofirst=false}l.tolWidth=+ow.value;ofill();applyText(l);scheduleDraw()};ow.onchange=()=>ofirst=true;
+      s.append(sub);
+    }
   }
+}
+const EYE_SVG='<svg viewBox="0 0 24 24"><path d="M16.2 3.8l4 4L8.5 19.5H4.5v-4L16.2 3.8z"/><path d="M13.7 6.3l4 4"/></svg>';
+function armDropper(key,enable){ // shared eyedropper arming: hides the panel while picking, it reopens when the pick ends
+  const wasSheet=sheetMode;dropper=dropper&&dropper.on?null:{on:true,pushed:false,picked:false,key,enable};pickData=null;
+  if(dropper&&wasSheet){openSheet(wasSheet);dropper={on:true,pushed:false,picked:false,key,enable,sheet:wasSheet};pickData=null}
+  else{renderSheet();draw()}
+  if(dropper)toast('Tap or drag on the photo to grab its color')
 }
 function fxRow(l,o){ // shared swatch row for shadow/outline: custom color well + eyedropper
   const row=document.createElement('div');row.className='swatches';
-  const colors=[null,'#000000','#808080','#ffffff','#ff0000','#ff8800','#ffff00','#00ed00'];
-  colors.forEach((col,n)=>{const b=document.createElement('button');b.className=(!col?'transparent ':'')+((!col&&o.off)||(col&&!o.off&&o.col===col)?'selected':'');b.style.background=col||'white';b.setAttribute('aria-label',['No color','Black','Gray','White','Red','Orange','Yellow','Green'][n]);b.onclick=()=>{pushUndo();o.set(col);renderSheet();draw()};row.append(b)});
+  const colors=o.allowOff===false?['#000000','#808080','#ffffff','#ff0000','#ff8800','#ffff00','#00ed00']:[null,'#000000','#808080','#ffffff','#ff0000','#ff8800','#ffff00','#00ed00'];
+  const names=o.allowOff===false?['Black','Gray','White','Red','Orange','Yellow','Green']:['No color','Black','Gray','White','Red','Orange','Yellow','Green'];
+  colors.forEach((col,n)=>{const b=document.createElement('button');b.className=(!col?'transparent ':'')+((!col&&o.off)||(col&&!o.off&&o.col===col)?'selected':'');b.style.background=col||'white';b.setAttribute('aria-label',names[n]);b.onclick=()=>{pushUndo();o.set(col);renderSheet();draw()};row.append(b)});
   const isCustom=!o.off&&o.col&&!colors.includes(o.col);
   const custom=document.createElement('button');custom.className=isCustom?'selected':'';custom.setAttribute('aria-label','Custom color');
   custom.style.background=isCustom?o.col:'conic-gradient(#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00)';
@@ -502,10 +531,7 @@ function fxRow(l,o){ // shared swatch row for shadow/outline: custom color well 
   row.append(custom);
   const eye=document.createElement('button');eye.className=dropper&&dropper.on?'armed':'';eye.setAttribute('aria-label','Pick color from photo');eye.title='Pick color from photo';
   eye.innerHTML='<svg viewBox="0 0 24 24"><path d="M16.2 3.8l4 4L8.5 19.5H4.5v-4L16.2 3.8z"/><path d="M13.7 6.3l4 4"/></svg>';
-  eye.onclick=()=>{const wasSheet=sheetMode;dropper=dropper&&dropper.on?null:{on:true,pushed:false,picked:false,key:o.key,enable:o.enable};pickData=null;
-    if(dropper&&wasSheet){openSheet(wasSheet);dropper={on:true,pushed:false,picked:false,key:o.key,enable:o.enable,sheet:wasSheet};pickData=null} // hide the panel so the whole photo can be sampled (it reopens when the pick ends)
-    else{renderSheet();draw()}
-    if(dropper)toast('Tap or drag on the photo to grab its color')};
+  eye.onclick=()=>armDropper(o.key,o.enable);
   row.append(eye);
   return row;
 }
