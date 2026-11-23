@@ -6,7 +6,7 @@
 <title>Layers</title><link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="4-icon.png">
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-html,body{margin:0;height:100%;background:#000;color:#eee;font:12px -apple-system,system-ui,sans-serif;overflow:hidden;overscroll-behavior:none}
+html,body{margin:0;height:100%;background:#000;color:#eee;font:12px -apple-system,system-ui,sans-serif;overflow:hidden;overscroll-behavior:none;touch-action:manipulation;-webkit-text-size-adjust:100%}
 #app,#cut{position:fixed;inset:0;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);background:#000}
 #cut{display:none;z-index:10}
 .bar{display:flex;align-items:stretch;background:#1c1c1e;border-bottom:1px solid #2c2c2e;min-height:52px}
@@ -87,7 +87,7 @@ input[type=file]{display:none}
 #sheet .fonts{display:flex;gap:6px;overflow-x:auto;padding:5px 0 7px}
 #sheet .fonts button{min-width:46px;height:42px;font-size:21px;background:#2c2c2e;color:#eee;border:1px solid #48484a;border-radius:6px;flex:none}
 #sheet .fonts button.on{outline:2px solid #079bff;outline-offset:1px}
-#sheet .tinput{flex:1;background:#2c2c2e;border:1px solid #48484a;border-radius:6px;color:#eee;font:14px -apple-system,system-ui,sans-serif;padding:7px;resize:none;-webkit-user-select:text;user-select:text}
+#sheet .tinput{flex:1;background:#2c2c2e;border:1px solid #48484a;border-radius:6px;color:#eee;font:16px -apple-system,system-ui,sans-serif;padding:7px;resize:none;-webkit-user-select:text;user-select:text}
 #sheet.effects .row input[type=color]{width:44px;height:30px;border:0;background:none;padding:0;flex:none}
 .swatches{display:flex;gap:7px;justify-content:space-between;height:49px;align-items:flex-start;padding:3px 0 6px}
 .swatches button{flex:1;min-width:0;height:38px;border-radius:6px;border:1px solid #888;padding:0;position:relative}
@@ -320,6 +320,25 @@ function undo(){if(!undoS.length)return;const st=undoS.pop();redoS.push(nowEntry
 function redo(){if(!redoS.length)return;const st=redoS.pop();undoS.push(nowEntry(st));restore(st);updUndo()}
 function updUndo(){$('undo').disabled=!undoS.length;$('redo').disabled=!redoS.length}
 $('undo').onclick=undo;$('redo').onclick=redo;
+
+/* iOS Safari page-zoom guards: pinch (gesture*), double-tap, and input-focus zoom */
+document.addEventListener('gesturestart',e=>e.preventDefault());
+document.addEventListener('gesturechange',e=>e.preventDefault());
+document.addEventListener('gestureend',e=>e.preventDefault());
+document.addEventListener('dblclick',e=>e.preventDefault(),{passive:false});
+let _lastTap=0;
+document.addEventListener('touchend',e=>{const n=Date.now();if(n-_lastTap<350&&!e.target.closest('button,input,label,textarea,a'))e.preventDefault();_lastTap=n},{passive:false});
+document.addEventListener('focusout',e=>{if(e.target.matches('textarea,input'))setTimeout(()=>{window.scrollTo(0,0);forceUnzoom()},60)});
+// Safari remembers a site's pinch zoom across reloads; re-applying the viewport meta snaps it back to 100%.
+function forceUnzoom(){
+  if(!window.visualViewport||Math.abs(visualViewport.scale-1)<=0.02)return;
+  const m=document.querySelector('meta[name=viewport]');
+  m.setAttribute('content','width=device-width,initial-scale=0.9999,maximum-scale=1,user-scalable=no,viewport-fit=cover');
+  requestAnimationFrame(()=>m.setAttribute('content','width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover'));
+  window.scrollTo(0,0);
+}
+window.addEventListener('pageshow',()=>setTimeout(forceUnzoom,50));
+document.addEventListener('DOMContentLoaded',()=>setTimeout(forceUnzoom,50));
 
 /* gestures on main canvas */
 const ptrs=new Map();let g=null;
