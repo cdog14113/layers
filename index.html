@@ -358,9 +358,13 @@ stage.addEventListener('pointermove',e=>{
     if(!g.active){ // both fingers must travel before a pinch engages, so a stray touch can't spin the layer
       const ma=Math.hypot(a.clientX-g.start[g.idA].x,a.clientY-g.start[g.idA].y),mb=Math.hypot(b.clientX-g.start[g.idB].x,b.clientY-g.start[g.idB].y);
       if(ma>=8&&mb>=8){g.active=true;g.d=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);g.a=Math.atan2(b.clientY-a.clientY,b.clientX-a.clientX);g.sx=l.sx;g.sy=l.sy;g.r=l.r;g.cx=(a.clientX+b.clientX)/2;g.cy=(a.clientY+b.clientY)/2;g.lx=l.x;g.ly=l.y}
+      else{const f=a;l.x=g.lx+(f.clientX-g.start[g.idA].x)/view.s;l.y=g.ly+(f.clientY-g.start[g.idA].y)/view.s} // keep following the first finger until the pinch engages
     }
     if(g.active){const d=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY),an=Math.atan2(b.clientY-a.clientY,b.clientX-a.clientX),k=d/g.d,mx=(a.clientX+b.clientX)/2,my=(a.clientY+b.clientY)/2;
-      l.sx=g.sx*k;l.sy=g.sy*k;l.r=g.r+(an-g.a);l.x=g.lx+(mx-g.cx)/view.s;l.y=g.ly+(my-g.cy)/view.s}
+      if(g.kk===undefined){g.kk=1;g.rr=an}
+      if(Math.abs(k-g.kk)>=0.008){l.sx=g.sx*k;l.sy=g.sy*k;g.kk=k} // deadband: sub-1% scale tremor is finger noise, not intent
+      if(d>=24&&Math.abs(an-g.rr)>=0.012){l.r=g.r+(an-g.a);g.rr=an} // angle is noise when fingers nearly touch: hold rotation there
+      l.x=g.lx+(mx-g.cx)/view.s;l.y=g.ly+(my-g.cy)/view.s}
     draw();return;
   }
   if(e.pointerId!==g.pid)return; // a gesture belongs to the finger that started it
