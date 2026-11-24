@@ -36,8 +36,9 @@ input[type=file]{display:none}
 .th .lk.on svg{stroke:#ffd60a}
 #stripTog{position:absolute;left:58px;top:50%;transform:translateY(-50%);z-index:4;width:20px;height:52px;border-radius:0 10px 10px 0;background:rgba(44,44,46,.92);border:1px solid rgba(72,72,74,.8);border-left:0;display:flex;align-items:center;justify-content:center;color:#8e8e93;padding:0}
 #stripTog svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
-#stage.nostrip #strip{display:none}
-#stage.nostrip #stripTog{left:0}
+#strip{transition:transform .18s ease-out}
+#stage.nostrip #strip{transform:translateX(-110%);pointer-events:none}
+#top .ib.on{color:#079bff}
 #exPop{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:30;display:none;align-items:center;justify-content:center}
 #exPop.show{display:flex}
 #exPop .excard{width:min(320px,84vw);background:rgba(30,30,32,.97);border-radius:16px;overflow:hidden;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,.5)}
@@ -76,6 +77,23 @@ input[type=file]{display:none}
 #cut .cbg{background:#1c1c1e}
 #smooth{display:none;background:#1c1c1e;color:#fff;padding:6px 12px;align-items:center;gap:6px}
 #smooth button{flex:1;padding:10px 0;border:0;border-radius:8px;background:#2c2c2e;color:#fff;font:inherit}#smooth button.on{background:#2f86f6}#smooth button.x{flex:2;background:#2f86f6}
+#warp{position:fixed;inset:0;display:none;flex-direction:column;padding-top:env(safe-area-inset-top);background:#000;z-index:10}
+#warpTop{display:flex;align-items:center;gap:12px;padding:8px 12px;background:#000}
+#warpTop .rb{width:44px;height:44px;border-radius:50%;border:0;background:#1c1c1e;color:#4da3ff;font:600 22px -apple-system,sans-serif;display:flex;align-items:center;justify-content:center;padding:0;flex:none}
+#warpTop .rb svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+#warpTop #warpBack{color:#ff453a}#warpTop .hl{background:none;border:1.5px solid #2f86f6;width:36px;height:36px;font-size:20px}
+#warpTop .ok{background:#2f86f6;color:#fff;width:50px;height:50px}
+#warpTitle{flex:1;text-align:center;color:#fff;font-size:16px;font-weight:600}
+#wc{flex:1;min-height:0;position:relative;touch-action:none;background:url(data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%2716%27%20height=%2716%27%3E%3Crect%20width=%2716%27%20height=%2716%27%20fill=%27%233a3a3c%27/%3E%3Crect%20width=%278%27%20height=%278%27%20fill=%27%232a2a2c%27/%3E%3Crect%20x=%278%27%20y=%278%27%20width=%2716%27%20height=%278%27%20fill=%27%232a2a2c%27/%3E%3C/svg%3E) 0 0/16px 16px}
+#wc canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+#warpCtl{display:flex;align-items:center;gap:12px;padding:8px 12px 4px;background:#1c1c1e;color:#fff}
+#warpCtl .sl{flex:1;display:flex;flex-direction:column;align-items:center;font-size:14px;gap:2px;min-width:0}#warpCtl .sl input{width:100%}
+#warpCtl .ur{background:none;border:0;color:#2f86f6;display:flex;flex-direction:column;align-items:center;font-size:12px;padding:2px 4px;min-width:46px;flex:none}
+#warpCtl .ur svg{width:34px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#warpCtl .ur b{font-weight:500;color:#2f86f6}#warpCtl .ur:disabled{opacity:.4}
+#warpTabs{display:flex;background:#2c2c2e;margin:4px 10px calc(10px + env(safe-area-inset-bottom));border-radius:30px;padding:5px;gap:2px;flex:none}
+#warpTabs button{flex:1;border:0;background:none;color:#fff;font:500 16px -apple-system,system-ui,sans-serif;border-radius:24px;padding:12px 0}
+#warpTabs button.on{background:#2f86f6}
 #toast{position:fixed;left:50%;bottom:120px;transform:translateX(-50%);background:rgba(0,0,0,.8);color:#fff;padding:9px 14px;border-radius:8px;z-index:30;display:none;max-width:80%;text-align:center}
 
 /* Photo Layers-style floating adjustment controls */
@@ -104,12 +122,12 @@ input[type=file]{display:none}
 .swatches .transparent{background-color:#fff!important;background-image:conic-gradient(#bbb 25%,#fff 0 50%,#bbb 0 75%,#fff 0)!important;background-size:12px 12px!important}
 .swatches button svg{width:20px;height:20px;stroke:#eee;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;display:block;margin:auto}
 .swatches button.armed{outline:2px solid #079bff;outline-offset:1px;background:#2c2c2e}
-#bot{height:53px;background:#272727;flex:none}#bot .ib{font-size:0;color:#3498dc;padding:5px 0;gap:0}#bot .ib svg{width:28px;height:28px;stroke-width:1.4}#bot .ib.on{background:#079bff;color:white;box-shadow:inset 0 0 0 2px #299fff}#bot #bRemove{color:#ef5a64}
+#bot{height:53px;background:#272727;flex:none;overflow-x:auto}#bot .ib{flex:1 0 44px}#bot .ib{font-size:0;color:#3498dc;padding:5px 0;gap:0}#bot .ib svg{width:28px;height:28px;stroke-width:1.4}#bot .ib.on{background:#079bff;color:white;box-shadow:inset 0 0 0 2px #299fff}#bot #bRemove{color:#ef5a64}
 @media(max-width:360px){#sheet.effects label{width:79px;font-size:12px}#sheet.effects .row{gap:7px}#sheet.effects.shadow label{font-size:10px}}
 </style></head><body>
 <div id="app">
  <div class="bar" id="top">
-  <button class="ib" id="back"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>New</button>
+  <button class="ib" id="bLayers" aria-label="Layers" aria-pressed="true"><svg viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/><path d="M3 17l9 5 9-5"/></svg>Layers</button>
   <button class="ib" id="bgBtn"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 16l5-5 4 4 3-3 6 6"/></svg>Background</button>
   <label class="ib"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M12 8v8M8 12h8"/></svg>Add<input id="file" type="file" accept="image/*" multiple></label>
   <button class="ib" id="replace" aria-label="Replace photo"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4zM4 16l5-5 5 5 3-3 3 3"/></svg>Change</button>
@@ -118,7 +136,7 @@ input[type=file]{display:none}
   <button class="ib" id="redo"><svg viewBox="0 0 24 24"><path d="M15 8l5 5-5 5M20 13H10a6 6 0 00-6 6"/></svg>Redo</button>
   <button class="ib" id="save"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Save</button>
  </div>
- <div id="stage"><div id="strip"></div><button id="stripTog" aria-label="Hide layers panel"></button><canvas id="cv"></canvas><div id="empty">Tap Add Photo to start.<br>Drag to move. Pinch to scale and rotate, or use the pink handles. Cut removes a background.</div></div>
+ <div id="stage"><div id="strip"></div><canvas id="cv"></canvas><div id="empty">Tap Add Photo to start.<br>Drag to move. Pinch to scale and rotate, or use the pink handles. Cut removes a background.</div></div>
  <div id="sheet"></div>
  <div id="exPop"><div class="excard">
   <div class="ext">Selected Image</div>
@@ -130,6 +148,9 @@ input[type=file]{display:none}
   <button class="ib" id="bFit" aria-label="Fit"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>Fit</button>
   <button class="ib" id="bFlip" aria-label="Flip"><svg viewBox="0 0 24 24"><path d="M12 3v18M8 7L3 17h5zM16 7l5 10h-5z"/></svg>Flip</button>
   <button class="ib" id="bCut" aria-label="Cut"><svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4L8.5 15.5M14.5 14.5L20 20M8.5 8.5L12 12"/></svg>Cut</button>
+  <button class="ib" id="bStretch" aria-label="Stretch"><svg viewBox="0 0 24 24"><rect x="3" y="9" width="18" height="6" rx="1"/><path d="M12 3v3M12 18v3M10 5l2-2 2 2M10 19l2 2 2-2"/></svg>Stretch</button>
+  <button class="ib" id="bReshape" aria-label="Reshape"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 12c4-4 12 4 16 0M12 4c-4 4 4 12 0 16"/></svg>Reshape</button>
+  <button class="ib" id="bResize" aria-label="Resize"><svg viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="10" rx="1"/><path d="M7 7L3.5 3.5M17 7l3.5-3.5M7 17l-3.5 3.5M17 17l3.5 3.5"/></svg>Resize</button>
   <button class="ib" id="bColor" aria-label="Color"><svg viewBox="0 0 24 24"><path d="M3 6h10m4 0h4M3 12h4m4 0h10M3 18h10m4 0h4"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="18" r="2"/></svg>Color</button>
   <button class="ib" id="bShadow" aria-label="Shadow"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M3 21h10m4 0h4"/><circle cx="15" cy="21" r="2"/></svg>Shadow</button>
   <button class="ib" id="bOutline" aria-label="Outline"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/></svg>Outline</button>
@@ -155,6 +176,28 @@ input[type=file]{display:none}
  </div>
  <div id="cutTabs">
   <button data-m="auto">Auto</button><button data-m="color">Color</button><button data-m="magic">&#9733;</button><button data-m="manual" class="on">Manual</button><button data-m="repair">Repair</button><button data-m="zoom">Zoom</button>
+ </div>
+</div>
+<div id="warp">
+ <div id="warpTop">
+  <button id="warpBack" class="rb" aria-label="Cancel"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  <div id="warpTitle">Reshape</div>
+  <button id="warpHelp" class="rb hl" aria-label="Help">?</button>
+  <button id="warpDone" class="rb ok" aria-label="Done"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+ </div>
+ <div id="wc"><canvas id="wcv"></canvas></div>
+ <div id="warpCtl">
+  <div id="wSlStretch" style="display:none;flex:1;flex-direction:column;gap:4px">
+   <div class="sl"><span id="wamtl">Stretch : 0</span><input id="wamt" type="range" min="-100" max="100" value="0" aria-label="Stretch amount"></div>
+   <div class="sl"><span id="wzwl">Zone : 33%</span><input id="wzw" type="range" min="10" max="90" value="33" aria-label="Zone size"></div>
+  </div>
+  <div id="wSlReshape" class="sl" style="display:none"><span id="wbrl">Brush : 80</span><input id="wbr" type="range" min="20" max="200" value="80" aria-label="Brush size"></div>
+  <button id="wundo" class="ur"><svg viewBox="0 0 24 24"><path d="M9 7L4 12l5 5M4 12h10a6 6 0 016 6"/></svg><b id="wucount">0</b></button>
+  <button id="wredo" class="ur"><svg viewBox="0 0 24 24"><path d="M15 7l5 5-5 5M20 12H10a6 6 0 00-6 6"/></svg><b>Redo</b></button>
+ </div>
+ <div id="warpTabs">
+  <span id="wTabsStretch" style="display:none;flex:1;display:flex;gap:2px"><button id="wAxisV" class="on">Vertical</button><button id="wAxisH">Horizontal</button></span>
+  <span id="wTabsReshape" style="display:none;flex:1;display:flex;gap:2px"><button id="wLight" class="on">Light</button><button id="wHeavy">Heavy</button></span>
  </div>
 </div>
 <div id="toast"></div>
@@ -308,11 +351,22 @@ function dropSample(p){ // eyedropper: sample the composited canvas color at can
   if(dropper.enable)dropper.enable(l);
   dropper.picked=true;
 }
+function alphaMask(l){ // cached low-res alpha bitmap: one small readback per layer image, instead of a full-canvas getImageData sync on every tap (the iOS stall)
+  if(l._amSrc===l.src&&l._am)return l._am;
+  const w=l.src.width,h=l.src.height,k=Math.min(1,192/Math.max(w,h));
+  const mw=Math.max(1,Math.round(w*k)),mh=Math.max(1,Math.round(h*k));
+  const c=mkC(mw,mh),x=c.getContext('2d');x.drawImage(l.src,0,0,mw,mh);
+  const d=x.getImageData(0,0,mw,mh).data,a=new Uint8Array(mw*mh);
+  for(let i=0;i<a.length;i++)a[i]=d[i*4+3];
+  l._am={w:mw,h:mh,a};l._amSrc=l.src;return l._am;
+}
 function hit(l,p){
   const w=l.src.width,h=l.src.height,dx=p.x-l.x,dy=p.y-l.y,c=Math.cos(-l.r),s=Math.sin(-l.r);
   const lx=(dx*c-dy*s)/l.sx*(l.flipX?-1:1),ly=(dx*s+dy*c)/l.sy;
   if(Math.abs(lx)>w/2||Math.abs(ly)>h/2)return false;
-  try{return l.src.getContext('2d').getImageData(Math.floor(lx+w/2),Math.floor(ly+h/2),1,1).data[3]>20}catch(e){return true}
+  const m=alphaMask(l);
+  const mx=Math.min(m.w-1,Math.max(0,Math.floor((lx+w/2)/w*m.w))),my=Math.min(m.h-1,Math.max(0,Math.floor((ly+h/2)/h*m.h)));
+  return m.a[my*m.w+mx]>20;
 }
 /* undo (props snapshot; pixel changes carry cloned canvases) */
 function snap(){return JSON.stringify({W,H,bg,bgTransparent,autoSize,sel,layers:layers.map(l=>{const o={...l};delete o.src;delete o.orig;delete o._cc;delete o._cs;delete o._ck;for(const k of Object.keys(o))if(k.startsWith('_'))delete o[k];return o})})}
@@ -443,11 +497,11 @@ function sl(label,key,min,max,step,l){
   i.oninput=()=>{if(first){pushUndo();first=false}l[key]=parseFloat(i.value);fill();scheduleDraw()};i.onchange=()=>first=true;
   r.querySelector('button').onclick=()=>{pushUndo();l[key]=defaults[key];i.value=l[key];fill();draw()};return r;
 }
-function openSheet(m){dropper=null;pickData=null;sheetMode=(sheetMode===m)?null:m;$('sheet').classList.toggle('show',!!sheetMode);['bColor','bShadow','bOutline','bText','bgBtn'].forEach(id=>$(id).classList.remove('on'));
-  if(sheetMode)$({color:'bColor',shadow:'bShadow',outline:'bOutline',text:'bText',bg:'bgBtn'}[sheetMode]).classList.add('on');renderSheet();setTimeout(()=>{fitView();draw()},30)}
+function openSheet(m){dropper=null;pickData=null;sheetMode=(sheetMode===m)?null:m;$('sheet').classList.toggle('show',!!sheetMode);['bColor','bShadow','bOutline','bText','bgBtn','bResize'].forEach(id=>$(id).classList.remove('on'));
+  if(sheetMode)$({color:'bColor',shadow:'bShadow',outline:'bOutline',text:'bText',bg:'bgBtn',resize:'bResize'}[sheetMode]).classList.add('on');renderSheet();setTimeout(()=>{fitView();draw()},30)}
 let textCtl=null; // which Text-panel sub-control is expanded (size/color/behind/outline); null = slim strip only
 function renderSheet(){
-  const s=$('sheet');s.className=(sheetMode?'show':'')+(['color','shadow','outline','text'].includes(sheetMode)?' effects '+sheetMode:'');s.innerHTML='';const l=cur();
+  const s=$('sheet');s.className=(sheetMode?'show':'')+(['color','shadow','outline','text','resize'].includes(sheetMode)?' effects '+sheetMode:'');s.innerHTML='';const l=cur();
   if(sheetMode==='bg'){
     s.innerHTML=`<div class="row"><label>Background</label><input type="color" id="bgc" value="${bg}"><button id="bgt" class="${bgTransparent?'on':''}">Transparent</button></div>
     <div class="row"><label>Canvas</label><select id="csize"><option value="screen">Phone screen</option><option value="auto">Match first photo</option><option value="1080x1080">Square 1:1</option><option value="1080x1440">3:4</option><option value="1080x1350">Portrait 4:5</option><option value="1080x1920">Story 9:16</option><option value="1920x1080">Wide 16:9</option></select></div>`;
@@ -455,6 +509,27 @@ function renderSheet(){
     $('csize').value=useScreen?'screen':autoSize?'auto':`${W}x${H}`;
     $('csize').onchange=e=>{pushUndo();const v=e.target.value;if(v==='screen'){autoSize=false;useScreen=true;[W,H]=screenSize()}else if(v==='auto'){autoSize=true;useScreen=false;const f=layers[0];if(f){const k=Math.min(1,2000/Math.max(f.src.width,f.src.height));W=Math.round(f.src.width*k);H=Math.round(f.src.height*k)}}else{autoSize=false;useScreen=false;[W,H]=v.split('x').map(Number)}
     layers.forEach(l=>{l.x=Math.min(Math.max(l.x,0),W);l.y=Math.min(Math.max(l.y,0),H)});fitView();refresh()};
+    return;
+  }
+  if(sheetMode==='resize'){
+    s.innerHTML=`<div class="row"><label for="rzw">Width</label><input id="rzw" type="range" min="25" max="200" step="1" value="100"><span id="rzwl" style="min-width:46px;text-align:right;color:#fff">${W}</span></div>
+    <div class="row"><label for="rzh">Height</label><input id="rzh" type="range" min="25" max="200" step="1" value="100"><span id="rzhl" style="min-width:46px;text-align:right;color:#fff">${H}</span></div>
+    <div class="row"><label>Lock ratio</label><button id="rzlock" aria-label="Lock aspect ratio"><svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg></button><span style="color:#aaa">Resize the whole canvas; everything scales with it.</span></div>`;
+    let bW=W,bH=H,lock=false,firstW=true,firstH=true;
+    const fillT=i=>i.style.setProperty('--fill',((+i.value-25)/(200-25)*100)+'%');
+    fillT($('rzw'));fillT($('rzh'));
+    const rebase=()=>{bW=W;bH=H;$('rzw').value=100;$('rzh').value=100;fillT($('rzw'));fillT($('rzh'))}; // 100% = current size, so each drag compounds from where you are
+    $('rzlock').onclick=()=>{lock=!lock;$('rzlock').classList.toggle('on',lock)};
+    const applyR=which=>{let pw=+$('rzw').value,ph=+$('rzh').value;
+      if(lock){if(which==='w'){ph=pw;$('rzh').value=ph;fillT($('rzh'))}else{pw=ph;$('rzw').value=pw;fillT($('rzw'))}}
+      const nW=Math.max(64,Math.min(4000,Math.round(bW*pw/100))),nH=Math.max(64,Math.min(4000,Math.round(bH*ph/100)));
+      const fx=nW/W,fy=nH/H;if(nW===W&&nH===H)return;
+      W=nW;H=nH;useScreen=false;autoSize=false;
+      layers.forEach(l=>{l.x*=fx;l.y*=fy;l.sx*=fx;l.sy*=fy});
+      $('rzwl').textContent=W;$('rzhl').textContent=H;
+      fitView();draw()};
+    $('rzw').oninput=()=>{if(firstW){pushUndo();firstW=false}applyR('w')};$('rzw').onchange=()=>{firstW=true;rebase()};
+    $('rzh').oninput=()=>{if(firstH){pushUndo();firstH=false}applyR('h')};$('rzh').onchange=()=>{firstH=true;rebase()};
     return;
   }
   if(!l){s.innerHTML='<div class="row">Select a layer first.</div>';return}
@@ -540,8 +615,8 @@ $('bText').onclick=()=>{const l=cur();if(l&&l.type==='text'){openSheet('text')}e
 $('bFit').onclick=()=>{const l=cur();if(!l)return;if(l.lock)return toast('Layer is locked');pushUndo();fitLayer(l);draw()};
 $('bFlip').onclick=()=>{const l=cur();if(!l)return;pushUndo();l.flipX=!l.flipX;draw()};
 $('bRemove').onclick=()=>{const l=cur();if(!l)return;pushUndo();layers.splice(layers.indexOf(l),1);sel=layers.length?layers[layers.length-1].id:null;refresh()};
-const setStrip=h=>{stage.classList.toggle('nostrip',h);$('stripTog').innerHTML=h?'<svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>':'<svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>';$('stripTog').setAttribute('aria-label',h?'Show layers panel':'Hide layers panel');try{localStorage.setItem('layers-strip-hidden',h?'1':'')}catch(e){}fitView();draw()};
-$('stripTog').onclick=()=>setStrip(!stage.classList.contains('nostrip'));
+const setStrip=h=>{stage.classList.toggle('nostrip',h);$('bLayers').classList.toggle('on',!h);$('bLayers').setAttribute('aria-pressed',h?'false':'true');try{localStorage.setItem('layers-strip-hidden',h?'1':'')}catch(e){}fitView();draw()};
+$('bLayers').onclick=()=>setStrip(!stage.classList.contains('nostrip'));
 setStrip((()=>{try{return localStorage.getItem('layers-strip-hidden')==='1'}catch(e){return false}})());
 $('bChange').onclick=()=>{if(cur())$('exPop').classList.add('show')};
 $('exPop').onclick=e=>{if(e.target.id==='exPop')e.target.classList.remove('show')};
@@ -569,7 +644,7 @@ $('file').onchange=async e=>{
   }
   refresh();
 };
-$('back').onclick=()=>{if(layers.length&&!confirm('Start a new project? Current layers will be cleared.'))return;layers=[];sel=null;undoS.length=0;redoS.length=0;autoSize=false;useScreen=true;[W,H]=screenSize();bgTransparent=true;fitView();refresh()};
+
 $('save').onclick=async()=>{
   if(!layers.length)return;const c=mkC(W,H);render(c.getContext('2d'),true);
   const blob=await new Promise(r=>c.toBlob(r,'image/png'));const file=new File([blob],'photolayers-'+Date.now()+'.png',{type:'image/png'});
@@ -751,7 +826,118 @@ $('smDone').onclick=()=>{if(E)commitCut()};
 $('cutHelp').onclick=()=>toast('Drag to erase. The brush ring sits above your finger (Offset). Only Move pans without erasing; two fingers zoom. Tap the check to finish.');
 $('onlyMove').onclick=()=>{if(!E)return;E.moveOnly=!E.moveOnly;$('onlyMove').classList.toggle('on',E.moveOnly)};
 $('bCut').onclick=()=>cur()&&openCut();
-window.__t={adjusted,render,drawLayer,openSheet,sl,get layers(){return layers},newLayer,store,refresh,get E(){return E},cm,get state(){return {W,H,sel}},get sheetMode(){return sheetMode},setCM,ccPos,imgPt,colorAt,magicAt,pushE,brushAt};
+/* ===== Warp editor: Stretch + Reshape (Airbrush-style) ===== */
+let WE=null;const wc=$('wc'),wcv=$('wcv'),wcx=wcv.getContext('2d');
+function sizeWC(){const r=wc.getBoundingClientRect(),d=Math.min(window.devicePixelRatio||1,2);wcv.width=r.width*d;wcv.height=r.height*d;WE.d=d;WE.cw=r.width;WE.ch=r.height}
+function fitWC(){const w=WE.work.width,h=WE.work.height;WE.z=Math.min(WE.cw/w,WE.ch/h)*.96;WE.ox=(WE.cw-w*WE.z)/2;WE.oy=(WE.ch-h*WE.z)/2}
+function wImgPt(p){return {x:(p.x-WE.ox)/WE.z,y:(p.y-WE.oy)/WE.z}}
+function wPos(e){const r=wc.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top}}
+function wDraw(){
+  if(!WE)return;const d=WE.d;wcx.setTransform(d,0,0,d,0,0);wcx.clearRect(0,0,WE.cw,WE.ch);
+  wcx.imageSmoothingQuality='high';wcx.drawImage(WE.work,WE.ox,WE.oy,WE.work.width*WE.z,WE.work.height*WE.z);
+  if(WE.mode==='stretch'){
+    const w=WE.work.width,h=WE.work.height,cz=WE.zoneC,hw=WE.zoneW/2;
+    wcx.save();wcx.translate(WE.ox,WE.oy);wcx.scale(WE.z,WE.z);
+    wcx.fillStyle='rgba(255,255,255,.16)';wcx.strokeStyle='#ff3bd4';wcx.lineWidth=2/WE.z;
+    if(WE.axis==='v'){wcx.fillRect(0,cz-hw,w,hw*2);wcx.beginPath();wcx.moveTo(0,cz-hw);wcx.lineTo(w,cz-hw);wcx.moveTo(0,cz+hw);wcx.lineTo(w,cz+hw);wcx.stroke()}
+    else{wcx.fillRect(cz-hw,0,hw*2,h);wcx.beginPath();wcx.moveTo(cz-hw,0);wcx.lineTo(cz-hw,h);wcx.moveTo(cz+hw,0);wcx.lineTo(cz+hw,h);wcx.stroke()}
+    wcx.restore();
+  }else if(WE.touch){
+    wcx.beginPath();wcx.arc(WE.touch.x,WE.touch.y,WE.brush/2,0,7);wcx.lineWidth=2;wcx.strokeStyle='#ff3bd4';wcx.stroke();
+  }
+}
+function pushW(){WE.stack.push(WE.work.getContext('2d').getImageData(0,0,WE.work.width,WE.work.height));if(WE.stack.length>10)WE.stack.shift();WE.redo.length=0;updW()}
+function updW(){$('wundo').disabled=!WE.stack.length;$('wredo').disabled=!WE.redo.length;$('wucount').textContent=WE.stack.length}
+$('wundo').onclick=()=>{if(!WE||!WE.stack.length)return;const c=WE.work.getContext('2d');WE.redo.push(c.getImageData(0,0,WE.work.width,WE.work.height));c.putImageData(WE.stack.pop(),0,0);updW();wDraw()};
+$('wredo').onclick=()=>{if(!WE||!WE.redo.length)return;const c=WE.work.getContext('2d');WE.stack.push(c.getImageData(0,0,WE.work.width,WE.work.height));c.putImageData(WE.redo.pop(),0,0);updW();wDraw()};
+function stretchApply(){ // rebuild work from base with the zone expansion, smooth cosine falloff
+  if(!WE||WE.mode!=='stretch')return;
+  const src=WE.base,out=WE.work,c=out.getContext('2d'),w=src.width,h=src.height;
+  const k=WE.amt>=0?1+WE.amt/100:1+WE.amt/200,half=WE.zoneW/2,cz=WE.zoneC,amp=(k-1)*half;
+  const bump=t=>Math.abs(t)<1?Math.cos(t*Math.PI/2)**2:0;
+  c.clearRect(0,0,w,h);
+  if(WE.axis==='v'){for(let y=0;y<h;y++){const sy=Math.max(0,Math.min(h-1,y-amp*bump((y-cz)/half)));c.drawImage(src,0,sy,w,1,0,y,w,1)}}
+  else{for(let x=0;x<w;x++){const sx=Math.max(0,Math.min(w-1,x-amp*bump((x-cz)/half)));c.drawImage(src,sx,0,1,h,x,0,1,h)}}
+}
+function reshapeAt(a,b){ // liquify push: drag pixels from a toward b, radial falloff
+  const c=WE.work.getContext('2d'),str=WE.strength==='heavy'?.9:.4,rad=Math.max(3,WE.brush/2/WE.z);
+  const vx=(b.x-a.x)*str,vy=(b.y-a.y)*str,dist=Math.hypot(vx,vy);if(dist<.01)return;
+  const n=Math.max(1,Math.ceil(dist/Math.max(1,rad/3)));
+  for(let i=1;i<=n;i++){
+    const px=a.x+(b.x-a.x)*i/n,py=a.y+(b.y-a.y)*i/n,sx0=vx/n,sy0=vy/n;
+    const pad=Math.ceil(Math.max(Math.abs(sx0),Math.abs(sy0)))+2,R=Math.ceil(rad)+pad;
+    const x0=Math.max(0,Math.floor(px-R)),y0=Math.max(0,Math.floor(py-R));
+    const x1=Math.min(WE.work.width,Math.ceil(px+R)),y1=Math.min(WE.work.height,Math.ceil(py+R));
+    if(x1<=x0||y1<=y0)continue;
+    const sw=x1-x0,sh=y1-y0,id=c.getImageData(x0,y0,sw,sh),d=id.data;
+    const out2=new ImageData(sw,sh),od=out2.data,r2=rad*rad;
+    for(let yy=0;yy<sh;yy++)for(let xx=0;xx<sw;xx++){
+      const gx=x0+xx,gy=y0+yy,qx=gx-px,qy=gy-py,q2=qx*qx+qy*qy;
+      let wgt=q2>=r2?0:1-q2/r2;wgt*=wgt;
+      let sx=gx-sx0*wgt-x0,sy=gy-sy0*wgt-y0;
+      sx=Math.max(0,Math.min(sw-1.001,sx));sy=Math.max(0,Math.min(sh-1.001,sy));
+      const fx=Math.floor(sx),fy=Math.floor(sy),ax=sx-fx,ay=sy-fy;
+      const i00=(fy*sw+fx)*4,di=(yy*sw+xx)*4;
+      for(let ch=0;ch<4;ch++){
+        const v0=d[i00+ch]*(1-ax)+d[i00+4+ch]*ax,v1=d[i00+sw*4+ch]*(1-ax)+d[i00+sw*4+4+ch]*ax;
+        od[di+ch]=v0*(1-ay)+v1*ay;
+      }
+    }
+    c.putImageData(out2,x0,y0);
+  }
+}
+function setAxis(a){WE.axis=a;$('wAxisV').classList.toggle('on',a==='v');$('wAxisH').classList.toggle('on',a==='h');
+  const dim=a==='v'?WE.work.height:WE.work.width;WE.zoneC=dim/2;WE.zoneW=dim*(+$('wzw').value)/100;stretchApply();wDraw()}
+function openWarp(mode){
+  const l=cur();if(!l)return;if(l.lock)return toast('Layer is locked');
+  dropper=null;pickData=null;
+  WE={mode,l,before:l.src,base:cloneC(l.src),work:cloneC(l.src),stack:[],redo:[],z:1,ox:0,oy:0,pts:new Map(),gest:null,stroke:false,zoneDrag:false,touch:null,
+      axis:'v',zoneC:0,zoneW:0,amt:0,brush:80,strength:'light'};
+  $('warp').style.display='flex';$('warpTitle').textContent=mode==='stretch'?'Stretch':'Reshape';
+  $('wSlStretch').style.display=mode==='stretch'?'flex':'none';$('wSlReshape').style.display=mode==='reshape'?'flex':'none';
+  $('wTabsStretch').style.display=mode==='stretch'?'flex':'none';$('wTabsReshape').style.display=mode==='reshape'?'flex':'none';
+  $('wamt').value=0;$('wamtl').textContent='Stretch : 0';$('wbr').value=80;$('wbrl').textContent='Brush : 80';
+  $('wAxisV').classList.add('on');$('wAxisH').classList.remove('on');$('wLight').classList.add('on');$('wHeavy').classList.remove('on');
+  requestAnimationFrame(()=>{sizeWC();fitWC();const dim=WE.work.height;WE.zoneC=dim/2;WE.zoneW=dim*(+$('wzw').value)/100;updW();wDraw()});
+}
+function closeWarp(){$('warp').style.display='none';if(WE)WE.l._ck=null;WE=null;fitView();draw()}
+$('warpBack').onclick=()=>{if(WE)closeWarp();refresh()};
+$('warpDone').onclick=()=>{if(!WE)return;const l=WE.l,changed=WE.mode==='reshape'?WE.stack.length>0:WE.amt!==0;
+  if(changed){l.src=WE.work;undoS.push({state:snap(),imgs:{[l.id]:WE.before},srcs:Object.fromEntries(layers.map(x=>[x.id,x.src]))});if(undoS.length>40)undoS.shift();redoS.length=0}
+  closeWarp();refresh()};
+$('warpHelp').onclick=()=>toast(WE&&WE.mode==='stretch'?'Drag on the photo to move the highlighted zone. Slide Stretch right to grow that area, left to shrink it. Two fingers zoom. Tap the check to finish.':'Drag on the photo to push and sculpt it. Light is subtle, Heavy is stronger. Two fingers zoom. Tap the check to finish.');
+$('wamt').oninput=e=>{if(!WE)return;WE.amt=+e.target.value;$('wamtl').textContent='Stretch : '+(WE.amt>0?'+':'')+WE.amt;stretchApply();wDraw()};
+$('wzw').oninput=e=>{if(!WE)return;const dim=WE.axis==='v'?WE.work.height:WE.work.width;WE.zoneW=dim*(+e.target.value)/100;$('wzwl').textContent='Zone : '+e.target.value+'%';stretchApply();wDraw()};
+$('wbr').oninput=e=>{if(!WE)return;WE.brush=+e.target.value;$('wbrl').textContent='Brush : '+WE.brush;wDraw()};
+$('wAxisV').onclick=()=>WE&&setAxis('v');$('wAxisH').onclick=()=>WE&&setAxis('h');
+$('wLight').onclick=()=>{if(!WE)return;WE.strength='light';$('wLight').classList.add('on');$('wHeavy').classList.remove('on')};
+$('wHeavy').onclick=()=>{if(!WE)return;WE.strength='heavy';$('wHeavy').classList.add('on');$('wLight').classList.remove('on')};
+wc.addEventListener('pointerdown',e=>{
+  if(!WE)return;wc.setPointerCapture(e.pointerId);WE.pts.set(e.pointerId,wPos(e));
+  if(WE.pts.size===2){ // pinch zoom/pan; cancel any in-progress stroke
+    if(WE.stroke){const c=WE.work.getContext('2d');c.putImageData(WE.stack.pop(),0,0);WE.stroke=false;updW()}
+    const [a,b]=[...WE.pts.values()];WE.gest={d:Math.hypot(a.x-b.x,a.y-b.y),z:WE.z,ox:WE.ox,oy:WE.oy,mx:(a.x+b.x)/2,my:(a.y+b.y)/2};WE.touch=null;wDraw();return}
+  if(WE.pts.size>1)return;
+  const p=wPos(e);
+  if(WE.mode==='stretch'){WE.zoneDrag=true;const q=wImgPt(p),dim=WE.axis==='v'?WE.work.height:WE.work.width;WE.zoneC=Math.max(0,Math.min(dim,WE.axis==='v'?q.y:q.x));stretchApply();wDraw();return}
+  pushW();WE.stroke=true;WE.touch=p;WE.last=wImgPt(p);wDraw();
+});
+wc.addEventListener('pointermove',e=>{
+  if(!WE||!WE.pts.has(e.pointerId))return;const p=wPos(e);WE.pts.set(e.pointerId,p);
+  if(WE.pts.size>=2&&WE.gest&&WE.gest.d){const [a,b]=[...WE.pts.values()],d=Math.hypot(a.x-b.x,a.y-b.y),g=WE.gest;
+    const nz=Math.max(.05,Math.min(40,g.z*d/g.d)),mx=(a.x+b.x)/2,my=(a.y+b.y)/2;
+    WE.z=nz;WE.ox=mx-(g.mx-g.ox)*nz/g.z;WE.oy=my-(g.my-g.oy)*nz/g.z;wDraw();return}
+  if(WE.pts.size>1)return;
+  if(WE.mode==='stretch'){if(WE.zoneDrag){const q=wImgPt(p),dim=WE.axis==='v'?WE.work.height:WE.work.width;WE.zoneC=Math.max(0,Math.min(dim,WE.axis==='v'?q.y:q.x));stretchApply();wDraw()}return}
+  if(!WE.stroke)return;WE.touch=p;const q=wImgPt(p);reshapeAt(WE.last,q);WE.last=q;wDraw();
+});
+const wEnd=e=>{if(!WE)return;WE.pts.delete(e.pointerId);if(!WE.pts.size){WE.stroke=false;WE.gest=null;WE.zoneDrag=false;WE.touch=null;wDraw()}};
+wc.addEventListener('pointerup',wEnd);wc.addEventListener('pointercancel',wEnd);
+window.addEventListener('resize',()=>{if(WE){sizeWC();wDraw()}});
+$('bStretch').onclick=()=>cur()&&openWarp('stretch');
+$('bReshape').onclick=()=>cur()&&openWarp('reshape');
+$('bResize').onclick=()=>openSheet('resize');
+window.__t={adjusted,render,drawLayer,openSheet,sl,get layers(){return layers},newLayer,store,refresh,get E(){return E},cm,openWarp,get WE(){return WE},stretchApply,reshapeAt,setAxis,get state(){return {W,H,sel}},get sheetMode(){return sheetMode},setCM,ccPos,imgPt,colorAt,magicAt,pushE,brushAt};
 [W,H]=screenSize();fitView();refresh();
 if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script></body></html>
