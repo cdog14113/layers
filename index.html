@@ -37,7 +37,7 @@ input[type=file]{display:none}
 #stripTog{position:absolute;left:58px;top:50%;transform:translateY(-50%);z-index:4;width:20px;height:52px;border-radius:0 10px 10px 0;background:rgba(44,44,46,.92);border:1px solid rgba(72,72,74,.8);border-left:0;display:flex;align-items:center;justify-content:center;color:#8e8e93;padding:0}
 #stripTog svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
 #strip{transition:transform .18s ease-out}
-#stage.nostrip #strip{transform:translateX(-110%);pointer-events:none}
+#stage.nostrip #strip,#stage.nolayers #strip{transform:translateX(-110%);pointer-events:none}
 #top .ib.on{color:#079bff}
 #exPop{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:30;display:none;align-items:center;justify-content:center}
 #exPop.show{display:flex}
@@ -165,6 +165,7 @@ input[type=file]{display:none}
   <span id="wTabsStretch" style="display:none;flex:1;display:flex;gap:2px"><button id="wAxisV" class="on">Vertical</button><button id="wAxisH">Horizontal</button><button id="wAdd" aria-label="Add stretch zone">+ Zone</button></span>
   <span id="wTabsReshape" style="display:none;flex:1;display:flex;gap:2px"><button id="wLight" class="on">Light</button><button id="wHeavy">Heavy</button></span>
  </div>
+</div>
  <div id="exPop"><div class="excard">
   <div class="ext">Selected Image</div>
   <div class="exn">Only the selected layer is saved, as a transparent PNG with its cutout and color adjustments. Shadow and outline stay in the editor. To save the whole collage, use Save at the top.</div>
@@ -488,7 +489,7 @@ function endP(e){if(WE){warpUp(e);return}ptrs.delete(e.pointerId);if(!ptrs.size)
 stage.addEventListener('pointerup',endP);stage.addEventListener('pointercancel',endP);
 
 /* UI */
-function refresh(){draw();renderStrip();$('empty').style.display=layers.length?'none':'flex';updUndo();$('bot').style.opacity=cur()?1:.5;if(sheetMode)renderSheet()}
+function refresh(){stage.classList.toggle('nolayers',!layers.length);draw();renderStrip();$('empty').style.display=layers.length?'none':'flex';updUndo();$('bot').style.opacity=cur()?1:.5;if(sheetMode)renderSheet()}
 function renderStrip(){
   const s=$('strip');s.innerHTML='';
   [...layers].reverse().forEach(l=>{
